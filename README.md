@@ -15,3 +15,7 @@ bash <(curl -s https://raw.githubusercontent.com/hishadow1/discord-vps-bot/main/
 - Creates secure Docker containers with SSH
 - Users get root login with password
 - `/vps` to create, `/destroy` to remove
+
+- ## Dont forget to give me creadit if you are using or editing and the files
+
+# creadits - SHADOWGAMER
