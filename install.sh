@@ -3,33 +3,43 @@ set -e
 
 echo "🚀 Installing Discord VPS Bot..."
 
-# 1. Fix broken Docker if present
-echo "🔧 Checking and removing broken Docker..."
+# 1. Fix old/broken Docker (SAFE)
+echo "🔧 Removing old/broken Docker..."
 sudo apt remove -y docker docker-engine docker.io containerd runc || true
 sudo apt purge -y docker-ce docker-ce-cli containerd.io || true
 sudo rm -rf /var/lib/docker /var/lib/containerd
 
-# 2. Install base tools
-echo "📦 Installing system packages..."
+# 2. Install dependencies
+echo "📦 Installing required packages..."
 sudo apt update
-sudo apt install -y apt-transport-https ca-certificates curl software-properties-common python3 python3-pip git
+sudo apt install -y ca-certificates curl gnupg lsb-release python3 python3-pip git software-properties-common
 
-# 3. Install Docker from official source
-echo "🐳 Installing Docker safely..."
-curl -fsSL https://get.docker.com | sudo bash
+# 3. Add Docker GPG key & repo
+echo "🔑 Adding Docker key and repo..."
+sudo install -m 0755 -d /etc/apt/keyrings
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --batch --yes --dearmor -o /etc/apt/keyrings/docker.gpg
+echo \
+  "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] \
+  https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" \
+  | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
 
-# 4. Enable and start Docker
+# 4. Install Docker
+echo "🐳 Installing Docker..."
+sudo apt update
+sudo apt install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+
+# 5. Start Docker
 sudo systemctl enable docker
 sudo systemctl start docker
 
-# 5. Pull Ubuntu SSH container
-echo "📥 Pulling SSH-enabled Ubuntu container..."
+# 6. Pull SSH Docker image
+echo "📥 Pulling Ubuntu SSH container..."
 sudo docker pull rastasheep/ubuntu-sshd
 
-# 6. Install Python library
+# 7. Install Python bot requirements
 pip3 install -U discord.py
 
-# 7. Bot setup
+# 8. Setup bot code
 mkdir -p ~/discord-vps-bot && cd ~/discord-vps-bot
 
 read -p "🔐 Enter your Discord Bot Token: " BOT_TOKEN
@@ -38,7 +48,7 @@ if [[ -z "$BOT_TOKEN" ]]; then
   exit 1
 fi
 
-# 8. Save bot code
+# 9. Create bot script
 cat > main.py <<EOF
 import discord
 from discord import app_commands
@@ -82,7 +92,7 @@ async def vps(interaction: discord.Interaction):
         subprocess.run(["docker","exec",cname,"bash","-c",f"echo root:{pwd} | chpasswd"], check=True)
         user_containers[uid] = {"name":cname,"port":port}
         ip = socket.gethostbyname(socket.gethostname())
-        await interaction.response.send_message(f"🖥️ **VPS Ready!**\\n```\\nSSH Command:\\nssh root@{ip} -p {port}\\nPassword: {pwd}\\n```", ephemeral=True)
+        await interaction.response.send_message(f"🖥️ **VPS Ready!**\\n```\\nssh root@{ip} -p {port}\\nPassword: {pwd}\\n```", ephemeral=True)
     except Exception as e:
         await interaction.response.send_message(f"❌ Error creating VPS: {e}", ephemeral=True)
 
@@ -102,6 +112,7 @@ async def destroy(interaction: discord.Interaction):
 bot.run("${BOT_TOKEN}")
 EOF
 
-echo "✅ Setup complete!"
-echo "👉 Run the bot with:"
+# 10. Done
+echo -e "\n✅ Done!\n"
+echo "▶️ To start the bot:"
 echo "cd ~/discord-vps-bot && python3 main.py"
