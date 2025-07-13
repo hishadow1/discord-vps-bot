@@ -3,29 +3,32 @@ set -e
 
 echo "🚀 Installing Discord VPS Bot..."
 
-# Step 1: Install dependencies
-sudo apt update && sudo apt install -y docker.io python3 python3-pip curl git
+# ✅ Step 1: Install system dependencies (no docker.io to avoid containerd issues)
+sudo apt update && sudo apt install -y python3 python3-pip curl git
+
+# ✅ Step 2: Install Docker via official script (avoids conflicts with moby/containerd)
+curl -fsSL https://get.docker.com | sudo sh
+
+# ✅ Step 3: Start Docker
 sudo systemctl enable docker && sudo systemctl start docker
 
-# Step 2: Pull Docker image
-echo "📦 Pulling SSH-enabled Docker image..."
+# ✅ Step 4: Pull Ubuntu SSH Docker image
 sudo docker pull rastasheep/ubuntu-sshd
 
-# Step 3: Install Python dependencies
-echo "🐍 Installing Python packages..."
+# ✅ Step 5: Install Discord Python library
 pip3 install -U discord.py
 
-# Step 4: Prepare bot directory
+# ✅ Step 6: Set up bot folder
 mkdir -p ~/discord-vps-bot && cd ~/discord-vps-bot
 
-# Step 5: Prompt for bot token
+# ✅ Step 7: Ask for your Discord bot token
 read -p "🔐 Enter your Discord Bot Token: " BOT_TOKEN
 if [[ -z "$BOT_TOKEN" ]]; then
-  echo "❌ Bot token is required. Exiting."
+  echo "❌ Token missing. Exiting..."
   exit 1
 fi
 
-# Step 6: Write bot code
+# ✅ Step 8: Save bot code
 cat > main.py <<EOF
 import discord
 from discord import app_commands
@@ -89,7 +92,6 @@ async def destroy(interaction: discord.Interaction):
 bot.run("${BOT_TOKEN}")
 EOF
 
-echo ""
-echo "✅ Installation complete!"
-echo "➡️ To run your bot now:"
+echo "✅ Done!"
+echo "➡️ To start the bot, run:"
 echo "cd ~/discord-vps-bot && python3 main.py"
