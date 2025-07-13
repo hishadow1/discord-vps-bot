@@ -23,3 +23,14 @@ echo "🚀 Starting bot in background using nohup..."
 nohup python3 main.py > bot.log 2>&1 &
 
 echo "✅ Bot is now running in the background!"
+
+# Create restart script
+cat > restart.sh <<EOF
+#!/bin/bash
+pkill -f main.py || echo "No process to kill."
+sleep 1
+nohup python3 main.py > bot.log 2>&1 &
+echo "✅ Bot restarted!"
+EOF
+
+chmod +x restart.sh
