@@ -1,21 +1,25 @@
 # Discord VPS Bot
 
-Create disposable VPS containers for users in Discord via `/vps` and `/destroy`.
+🖥️ A powerful Discord bot that gives users their own SSH-accessible VPS container using Docker!
 
-## Installation
+---
 
-Run this one-line installer on your Linux VPS:
+## 📦 Features
+
+- `/vps` — Creates a temporary Docker container with SSH access
+- `/destroy` — Deletes the user’s container
+- Each user gets:
+  - Unique port (2222+)
+  - Root access with password
+  - Auto-restart on container crash
+- All built with **Python + Docker**
+
+---
+
+## 📥 One-Line Installer (Run on your VPS)
 
 ```bash
-bash <(curl -s https://raw.githubusercontent.com/hishadow1/discord-vps-bot/main/install.sh)
-```
-
-## Features
-
-- Creates secure Docker containers with SSH
-- Users get root login with password
-- `/vps` to create, `/destroy` to remove
-
+bash <(curl -s https://raw.githubusercontent.com/YOUR_USERNAME/discord-vps-bot/main/install.sh)
 - ## Dont forget to give me creadit if you are using or editing and the files
 
 # creadits - SHADOWGAMER
