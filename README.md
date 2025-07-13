@@ -19,7 +19,8 @@
 ## 📥 One-Line Installer (Run on your VPS)
 
 ```bash
-bash <(curl -s https://raw.githubusercontent.com/YOUR_USERNAME/discord-vps-bot/main/install.sh)
-- ## Dont forget to give me creadit if you are using or editing and the files
+bash <(curl -s https://raw.githubusercontent.com/hishadow1/discord-vps-bot/main/install.sh)
+-
+## Dont forget to give me creadit if you are using or editing and the files
 
 # creadits - SHADOWGAMER
