@@ -4,7 +4,9 @@ import discord from discord.ext import tasks from discord import app_commands im
 
 === CONFIGURATION ===
 
-ADMIN_USERNAMES = ["Shadow", "AdminUser"]  # Replace with actual usernames HEALTH_CHECK_INTERVAL = 60  # seconds
+ADMIN_USERNAMES = [] if os.path.exists("admin_users.txt"): with open("admin_users.txt") as f: ADMIN_USERNAMES = [line.strip() for line in f if line.strip()] else: ADMIN_USERNAMES = ["Shadow", "AdminUser"]  # fallback
+
+HEALTH_CHECK_INTERVAL = 60  # seconds
 
 === BOT SETUP ===
 
