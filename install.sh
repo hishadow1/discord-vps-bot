@@ -3,32 +3,42 @@ set -e
 
 echo "🚀 Installing Discord VPS Bot..."
 
-# ✅ Step 1: Install system dependencies (no docker.io to avoid containerd issues)
-sudo apt update && sudo apt install -y python3 python3-pip curl git
+# 1. Fix broken Docker if present
+echo "🔧 Checking and removing broken Docker..."
+sudo apt remove -y docker docker-engine docker.io containerd runc || true
+sudo apt purge -y docker-ce docker-ce-cli containerd.io || true
+sudo rm -rf /var/lib/docker /var/lib/containerd
 
-# ✅ Step 2: Install Docker via official script (avoids conflicts with moby/containerd)
-curl -fsSL https://get.docker.com | sudo sh
+# 2. Install base tools
+echo "📦 Installing system packages..."
+sudo apt update
+sudo apt install -y apt-transport-https ca-certificates curl software-properties-common python3 python3-pip git
 
-# ✅ Step 3: Start Docker
-sudo systemctl enable docker && sudo systemctl start docker
+# 3. Install Docker from official source
+echo "🐳 Installing Docker safely..."
+curl -fsSL https://get.docker.com | sudo bash
 
-# ✅ Step 4: Pull Ubuntu SSH Docker image
+# 4. Enable and start Docker
+sudo systemctl enable docker
+sudo systemctl start docker
+
+# 5. Pull Ubuntu SSH container
+echo "📥 Pulling SSH-enabled Ubuntu container..."
 sudo docker pull rastasheep/ubuntu-sshd
 
-# ✅ Step 5: Install Discord Python library
+# 6. Install Python library
 pip3 install -U discord.py
 
-# ✅ Step 6: Set up bot folder
+# 7. Bot setup
 mkdir -p ~/discord-vps-bot && cd ~/discord-vps-bot
 
-# ✅ Step 7: Ask for your Discord bot token
 read -p "🔐 Enter your Discord Bot Token: " BOT_TOKEN
 if [[ -z "$BOT_TOKEN" ]]; then
   echo "❌ Token missing. Exiting..."
   exit 1
 fi
 
-# ✅ Step 8: Save bot code
+# 8. Save bot code
 cat > main.py <<EOF
 import discord
 from discord import app_commands
@@ -92,6 +102,6 @@ async def destroy(interaction: discord.Interaction):
 bot.run("${BOT_TOKEN}")
 EOF
 
-echo "✅ Done!"
-echo "➡️ To start the bot, run:"
+echo "✅ Setup complete!"
+echo "👉 Run the bot with:"
 echo "cd ~/discord-vps-bot && python3 main.py"
