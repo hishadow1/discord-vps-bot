@@ -1,44 +1,81 @@
-main.py
+# main.py
+import discord
+from discord.ext import tasks
+from discord import app_commands
+import os
+import sys
+import time
 
-import discord from discord.ext import tasks from discord import app_commands import os import signal import sys import time
+# === CONFIG ===
+TOKEN = os.getenv("DISCORD_BOT_TOKEN")
 
-=== CONFIGURATION ===
+# Load admin usernames from file
+ADMIN_USERNAMES = []
+if os.path.exists("admin_users.txt"):
+    with open("admin_users.txt") as f:
+        ADMIN_USERNAMES = [line.strip() for line in f if line.strip()]
+else:
+    ADMIN_USERNAMES = ["YourUsername"]  # fallback if file missing
 
-ADMIN_USERNAMES = [] if os.path.exists("admin_users.txt"): with open("admin_users.txt") as f: ADMIN_USERNAMES = [line.strip() for line in f if line.strip()] else: ADMIN_USERNAMES = ["Shadow", "AdminUser"]  # fallback
+intents = discord.Intents.default()
+client = discord.Client(intents=intents)
+tree = app_commands.CommandTree(client)
 
-HEALTH_CHECK_INTERVAL = 60  # seconds
+# === Admin check ===
+def is_admin(interaction: discord.Interaction):
+    return interaction.user.name in ADMIN_USERNAMES
 
-=== BOT SETUP ===
+# === Health check loop ===
+@tasks.loop(seconds=60)
+async def health_check():
+    print("✅ Health check: Bot is alive.")
 
-intents = discord.Intents.default() intents.messages = True intents.message_content = True client = discord.Client(intents=intents) tree = app_commands.CommandTree(client)
+# === Slash commands ===
+@tree.command(name="ping", description="Test if the bot is alive.")
+async def ping(interaction: discord.Interaction):
+    await interaction.response.send_message("🏓 Pong!")
 
-=== HEALTH CHECK ===
+@tree.command(name="shutdown", description="Shutdown the bot (admin only).")
+async def shutdown(interaction: discord.Interaction):
+    if not is_admin(interaction):
+        await interaction.response.send_message("⛔ Not authorized", ephemeral=True)
+        return
+    await interaction.response.send_message("🛑 Shutting down...", ephemeral=True)
+    save_data()
+    await client.close()
 
-@tasks.loop(seconds=HEALTH_CHECK_INTERVAL) async def health_check(): print("[Health Check] Bot is running fine.")
+@tree.command(name="restart", description="Restart the bot (admin only).")
+async def restart(interaction: discord.Interaction):
+    if not is_admin(interaction):
+        await interaction.response.send_message("⛔ Not authorized", ephemeral=True)
+        return
+    await interaction.response.send_message("🔁 Restarting...", ephemeral=True)
+    save_data()
+    os.system("bash restart.sh")
+    await client.close()
 
-=== ADMIN CHECK ===
+@tree.command(name="backup", description="Trigger a data backup (admin only).")
+async def backup(interaction: discord.Interaction):
+    if not is_admin(interaction):
+        await interaction.response.send_message("⛔ Not authorized", ephemeral=True)
+        return
+    save_data()
+    await interaction.response.send_message("💾 Backup completed!", ephemeral=True)
 
-def is_admin(interaction: discord.Interaction): return interaction.user.name in ADMIN_USERNAMES
+# === Safe shutdown logic ===
+def save_data():
+    print("💾 Saving data... (you can add file/db logic here)")
 
-=== COMMANDS ===
+# === Bot ready ===
+@client.event
+async def on_ready():
+    await tree.sync()
+    print(f"🤖 Logged in as {client.user}")
+    health_check.start()
 
-@tree.command(name="ping", description="Check if the bot is alive.") async def ping(interaction: discord.Interaction): await interaction.response.send_message("🏓 Pong!")
-
-@tree.command(name="shutdown", description="Shutdown the bot (admin only).") async def shutdown(interaction: discord.Interaction): if not is_admin(interaction): await interaction.response.send_message("⛔ You are not authorized.", ephemeral=True) return await interaction.response.send_message("Shutting down safely...", ephemeral=True) save_data() await client.close()
-
-@tree.command(name="restart", description="Restart the bot (admin only).") async def restart(interaction: discord.Interaction): if not is_admin(interaction): await interaction.response.send_message("⛔ You are not authorized.", ephemeral=True) return await interaction.response.send_message("Restarting bot...", ephemeral=True) save_data() os.execv(sys.executable, ['python3'] + sys.argv)
-
-@tree.command(name="backup", description="Backup data (admin only).") async def backup(interaction: discord.Interaction): if not is_admin(interaction): await interaction.response.send_message("⛔ You are not authorized.", ephemeral=True) return save_data() await interaction.response.send_message("✅ Backup complete!", ephemeral=True)
-
-=== SAFETY ===
-
-def save_data(): print("[Safe Shutdown] Saving any persistent data if needed...") # Add backup logic here
-
-=== READY ===
-
-@client.event async def on_ready(): await tree.sync() print(f"✅ Logged in as {client.user}") health_check.start()
-
-=== START ===
-
-if name == "main": try: TOKEN = os.getenv("DISCORD_BOT_TOKEN") if not TOKEN: print("Error: DISCORD_BOT_TOKEN not set.") sys.exit(1) client.run(TOKEN) except KeyboardInterrupt: save_data() print("Bot shutdown via keyboard interrupt.") sys.exit(0)
-
+# === Start bot ===
+if __name__ == "__main__":
+    if not TOKEN:
+        print("❌ DISCORD_BOT_TOKEN not set.")
+        sys.exit(1)
+    client.run(TOKEN)
