@@ -2,6 +2,10 @@
 
 🖥️ A powerful Discord bot that gives users their own SSH-accessible VPS container using Docker!
 
+## Dont forget to give me creadit if you are using or editing and the files
+
+
+# creadits - SHADOWGAMER
 ---
 
 ## 📦 Features
@@ -20,7 +24,3 @@
 
 ```bash
 bash <(curl -s https://raw.githubusercontent.com/hishadow1/discord-vps-bot/main/install.sh)
--
-## Dont forget to give me creadit if you are using or editing and the files
-
-# creadits - SHADOWGAMER
